@@ -1,0 +1,39 @@
+name: Calendário semanal
+on:
+  workflow_dispatch:
+    inputs:
+      inicio:
+        description: "Data inicial (AAAA-MM-DD), opcional"
+        required: false
+        type: string
+      semanas:
+        description: "Quantidade de semanas (1 a 52)"
+        default: "1"
+        required: true
+        type: string
+  schedule:
+    - cron: "17 10 * * 1"
+permissions:
+  contents: read
+jobs:
+  calendario:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Gerar calendário e fichas
+        env:
+          INICIO: ${{ inputs.inicio }}
+          SEMANAS: ${{ inputs.semanas }}
+          TZ: America/Sao_Paulo
+        run: |
+          inicio="${INICIO:-$(date +%F)}"
+          semanas="${SEMANAS:-1}"
+          python scripts/gerar_calendario.py --inicio "$inicio" --semanas "$semanas" --saida saida
+      - uses: actions/upload-artifact@v4
+        with:
+          name: calendario-editorial
+          path: saida/
+          retention-days: 30
